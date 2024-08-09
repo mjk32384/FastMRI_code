@@ -1,0 +1,12 @@
+Traceback (most recent call last):
+  File "/mnt/c/민준/FastMRI/root/FastMRI_challenge/train.py", line 9, in <module>
+    from utils.learning.train_part import train
+  File "/mnt/c/민준/FastMRI/root/FastMRI_challenge/utils/learning/train_part.py", line 7, in <module>
+    from tqdm import tqdm
+ModuleNotFoundError: No module named 'tqdm'
+Traceback (most recent call last):
+  File "/mnt/c/민준/FastMRI/root/FastMRI_challenge/train.py", line 9, in <module>
+    from utils.learning.train_part import train
+  File "/mnt/c/민준/FastMRI/root/FastMRI_challenge/utils/learning/train_part.py", line 7, in <module>
+    from tqdm import tqdm
+ModuleNotFoundError: No module named 'tqdm'
