@@ -18,7 +18,7 @@ def parse():
                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('-g', '--GPU_NUM', type=int, default=0, help='GPU number to allocate')
     parser.add_argument('-b', '--batch-size', type=int, default=1, help='Batch size')
-    parser.add_argument('-n', '--net_name', type=Path, default='test_Varnet', help='Name of network')
+    parser.add_argument('-n', '--net_name', type=Path, default='test_6125_shuffled', help='Name of network')
     parser.add_argument('-p', '--path_data', type=Path, default='../../home/Data/leaderboard/', help='Directory of test data')
     
     parser.add_argument('--cascade', type=int, default=6, help='Number of cascades | Should be less than 12')

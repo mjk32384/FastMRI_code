@@ -1,4 +1,8 @@
-import os
+import os, sys
+
+if os.getcwd() + '/utils/model/' not in sys.path:
+    sys.path.insert(1, os.getcwd() + '/utils/model/')
+from utils.learning.train_part import train
 
 report_interval = 100
 
@@ -6,7 +10,7 @@ epoch = 10
 batch_size = 1
 lr = 1e-3
 
-net_name = 'test_Varnet_random_mask'
+net_name = 'test_6125_59'
 cascade = 6
 chans = 12
 sens_chans = 5
