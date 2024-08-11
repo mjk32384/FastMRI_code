@@ -102,7 +102,7 @@ class SliceData(Dataset):
             # validate인 경우에 모든 데이터를 다 쓰면 너무 오래 걸리니 일부만 사용
             # shuffle을 추가할 수도 있는데, seed 고정을 해도되는지 몰라서 일단 pass
             if self.validate:
-                image_files = image_files[:len(image_files)//3]
+                image_files = image_files[:len(image_files)//10]
             for fname in sorted(image_files):
                 num_slices = self._get_metadata(fname)
 
@@ -114,7 +114,7 @@ class SliceData(Dataset):
         # validate인 경우에 모든 데이터를 다 쓰면 너무 오래 걸리니 일부만 사용
         # shuffle을 추가할 수도 있는데, seed 고정을 해도되는지 몰라서 일단 pass
         if self.validate:
-            kspace_files = kspace_files[:len(kspace_files)//3]
+            kspace_files = kspace_files[:len(kspace_files)//10]
         for fname in sorted(kspace_files):
             num_slices = self._get_metadata(fname)
 

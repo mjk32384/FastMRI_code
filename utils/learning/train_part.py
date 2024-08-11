@@ -139,20 +139,6 @@ def train(args):
             del pretrained[layer]
     model.load_state_dict(pretrained)
     """
-
-    loss_type = SSIMLoss().to(device=device)
-    optimizer = torch.optim.Adam(model.parameters(), args.lr)
-
-    best_val_loss = 1.
-    start_epoch = 0
-
-
-    
-    train_loader = create_data_loaders(data_path = args.data_path_train, args = args, shuffle=True)
-    val_loader = create_data_loaders(data_path = args.data_path_val, args = args, default_acc=True)
-    
-    val_loss_log = np.empty((0, 2))
-
     # created here
     try:
         if(args.previous_model): #import previous model
@@ -165,22 +151,46 @@ def train(args):
         pass
     # to here
     
+    loss_type = SSIMLoss().to(device=device)
+    optimizer = torch.optim.Adam(model.parameters(), args.lr)
+
+    best_val_loss = 1.
+    start_epoch = 0
+    
+    # train_loader = create_data_loaders(data_path = args.data_path_train, args = args, shuffle=True)
+    train_loader = create_data_loaders(data_path = args.data_path_train, args = args, shuffle=True, validate=True, acc=5)
+    
+    
+    acc_list = [2, 3, 4, 5, 6, 7, 8, 9, 10]
+
+    file_path = os.path.join(args.val_loss_dir, "val_loss_log")
+    try:
+        val_loss_log = np.load(file_path)
+    except:
+        val_loss_log = np.empty((0, len(acc_list)+1))
+
     for epoch in range(start_epoch, args.num_epochs):
         print(f'Epoch #{epoch:2d} ............... {args.net_name} ...............')
         
         train_loss, train_time = train_epoch(args, epoch, model, train_loader, optimizer, loss_type)
-        val_loss, num_subjects, reconstructions, targets, inputs, val_time = validate(args, model, val_loader)
-        
-        val_loss_log = np.append(val_loss_log, np.array([[epoch, val_loss]]), axis=0)
-        file_path = os.path.join(args.val_loss_dir, "val_loss_log")
+        val_loss_list = []
+        val_time_list = []
+
+        for acc in acc_list:
+            val_loader = create_data_loaders(data_path = args.data_path_val, args = args, validate = True, acc = acc)
+            val_loss, num_subjects, reconstructions, targets, inputs, val_time = validate(args, model, val_loader)
+            val_loss_list.append(val_loss/num_subjects)
+            val_time_list.append(val_time)
+
+        val_loss_list.insert(0, epoch)
+        val_loss_log = np.append(val_loss_log, np.array([val_loss_list]), axis=0)
         np.save(file_path, val_loss_log)
         print(f"loss file saved! {file_path}")
 
+        val_loss = np.mean(val_loss_list)
+
         train_loss = torch.tensor(train_loss).cuda(non_blocking=True)
         val_loss = torch.tensor(val_loss).cuda(non_blocking=True)
-        num_subjects = torch.tensor(num_subjects).cuda(non_blocking=True)
-
-        val_loss = val_loss / num_subjects
 
         is_new_best = val_loss < best_val_loss
         best_val_loss = min(best_val_loss, val_loss)
@@ -188,7 +198,7 @@ def train(args):
         save_model(args, args.exp_dir, epoch + 1, model, optimizer, best_val_loss, is_new_best)
         print(
             f'Epoch = [{epoch:4d}/{args.num_epochs:4d}] TrainLoss = {train_loss:.4g} '
-            f'ValLoss = {val_loss:.4g} TrainTime = {train_time:.4f}s ValTime = {val_time:.4f}s',
+            f'ValLoss = {val_loss:.4g} TrainTime = {train_time:.4f}s ValTime = {sum(val_time_list):.4f}s',
         )
 
         if is_new_best:
@@ -196,5 +206,5 @@ def train(args):
             start = time.perf_counter()
             save_reconstructions(reconstructions, args.val_dir, targets=targets, inputs=inputs)
             print(
-                f'ForwardTime = {time.perf_counter() - start:.4f}s',
+               f'ForwardTime = {time.perf_counter() - start:.4f}s',
             )
