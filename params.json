@@ -3,13 +3,12 @@
     "epoch": 2,
     "batch_size": 1,
     "learning_rate": 0.001,
-    "net_name": "temp",
-    "cascade": 3,
-    "chans": 5,
-    "sens_chans": 3,
+    "net_name": "test_6125_59_1323",
+    "cascade": 6,
+    "chans": 12,
+    "sens_chans": 5,
     "acc_weight": {
-        "5": 0.5,
-        "9": 0.5
+        "9": 1
     },
-    "previous_model": "temp"
+    "previous_model": false
 }

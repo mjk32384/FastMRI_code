@@ -7,6 +7,8 @@ import requests
 from tqdm import tqdm
 from pathlib import Path
 import copy
+#added here
+import tqdm
 
 from collections import defaultdict
 from utils.data.load_data import create_data_loaders
@@ -55,7 +57,7 @@ def validate(args, model, data_loader):
     start = time.perf_counter()
 
     with torch.no_grad():
-        for iter, data in enumerate(data_loader):
+        for iter, data in enumerate(tqdm.tqdm(data_loader)):
             mask, kspace, target, _, fnames, slices = data
             kspace = kspace.cuda(non_blocking=True)
             mask = mask.cuda(non_blocking=True)
@@ -88,7 +90,7 @@ def save_model(args, exp_dir, epoch, model, optimizer, best_val_loss, is_new_bes
             'best_val_loss': best_val_loss,
             'exp_dir': exp_dir
         },
-        f=exp_dir / 'model.pt'
+        f=exp_dir / '_model.pt'
     )
     if is_new_best:
         shutil.copyfile(exp_dir / 'model.pt', exp_dir / 'best_model.pt')
