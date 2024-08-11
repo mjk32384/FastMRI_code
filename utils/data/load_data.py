@@ -85,18 +85,24 @@ import numpy as np
 
 
 class SliceData(Dataset):
-    def __init__(self, root, transform, input_key, target_key, forward=False, acc_weight = None, validate = False):
+    def __init__(self, root, transform, input_key, target_key, forward=False, acc_weight = None, default_acc = False, validate=False, acc=None):
         self.transform = transform
         self.input_key = input_key
         self.target_key = target_key
         self.forward = forward
         self.acc_weight = acc_weight
+        self.default_acc = default_acc
         self.validate = validate
+        self.acc = acc
         self.image_examples = []
         self.kspace_examples = []
 
         if not forward:
             image_files = list(Path(root / "image").iterdir())
+            # validate인 경우에 모든 데이터를 다 쓰면 너무 오래 걸리니 일부만 사용
+            # shuffle을 추가할 수도 있는데, seed 고정을 해도되는지 몰라서 일단 pass
+            if self.validate:
+                image_files = image_files[:len(image_files)//3]
             for fname in sorted(image_files):
                 num_slices = self._get_metadata(fname)
 
@@ -105,6 +111,10 @@ class SliceData(Dataset):
                 ]
 
         kspace_files = list(Path(root / "kspace").iterdir())
+        # validate인 경우에 모든 데이터를 다 쓰면 너무 오래 걸리니 일부만 사용
+        # shuffle을 추가할 수도 있는데, seed 고정을 해도되는지 몰라서 일단 pass
+        if self.validate:
+            kspace_files = kspace_files[:len(kspace_files)//3]
         for fname in sorted(kspace_files):
             num_slices = self._get_metadata(fname)
 
@@ -131,8 +141,10 @@ class SliceData(Dataset):
 
         with h5py.File(kspace_fname, "r") as hf:
             input = hf[self.input_key][dataslice]
-            if self.validate:
+            if self.default_acc:
                 mask = np.array(hf["mask"])
+            elif self.validate:
+                mask = create_mask({self.acc: 1}, hf["kspace"].shape[-1])
             else:
                 mask = create_mask(self.acc_weight, hf["kspace"].shape[-1])
         if self.forward:
@@ -146,7 +158,7 @@ class SliceData(Dataset):
         return self.transform(mask, input, target, attrs, kspace_fname.name, dataslice)
 
 
-def create_data_loaders(data_path, args, shuffle=False, isforward=False, validate=False):
+def create_data_loaders(data_path, args, shuffle=False, isforward=False, default_acc=False, validate=False, acc=None):
     if isforward == False:
         max_key_ = args.max_key
         target_key_ = args.target_key
@@ -160,7 +172,9 @@ def create_data_loaders(data_path, args, shuffle=False, isforward=False, validat
         target_key=target_key_,
         forward = isforward,
         acc_weight = args.acc_weight,
-        validate = validate
+        default_acc = default_acc,
+        validate = validate,
+        acc = acc
     )
 
     data_loader = DataLoader(

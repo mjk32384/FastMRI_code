@@ -149,7 +149,7 @@ def train(args):
 
     
     train_loader = create_data_loaders(data_path = args.data_path_train, args = args, shuffle=True)
-    val_loader = create_data_loaders(data_path = args.data_path_val, args = args, validate=True)
+    val_loader = create_data_loaders(data_path = args.data_path_val, args = args, default_acc=True)
     
     val_loss_log = np.empty((0, 2))
 
