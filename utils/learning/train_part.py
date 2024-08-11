@@ -157,9 +157,7 @@ def train(args):
     best_val_loss = 1.
     start_epoch = 0
     
-    # train_loader = create_data_loaders(data_path = args.data_path_train, args = args, shuffle=True)
-    train_loader = create_data_loaders(data_path = args.data_path_train, args = args, shuffle=True, validate=True, acc=5)
-    
+    train_loader = create_data_loaders(data_path = args.data_path_train, args = args, shuffle=True)    
     
     acc_list = [2, 3, 4, 5, 6, 7, 8, 9, 10]
 

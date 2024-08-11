@@ -24,7 +24,7 @@ def parse():
     parser.add_argument('-e', '--num-epochs', type=int, default=10, help='Number of epochs')
     parser.add_argument('-l', '--lr', type=float, default=1e-3, help='Learning rate')
     parser.add_argument('-r', '--report-interval', type=int, default=100, help='Report interval')
-    parser.add_argument('-n', '--net-name', type=Path, default='test_Varnet', help='Name of network')
+    parser.add_argument('-n', '--net-name', type=Path, default='test_6125_59', help='Name of network')
     parser.add_argument('-t', '--data-path-train', type=Path, default='../../home/Data/train/', help='Directory of train data')
     parser.add_argument('-v', '--data-path-val', type=Path, default='../../home/Data/val/', help='Directory of validation data')
     
@@ -56,12 +56,12 @@ model = VarNet(num_cascades=args.cascade,
                 sens_chans=args.sens_chans)
 model.to(device=device)
 
-checkpoint = torch.load(args.exp_dir / 'best_model.pt', map_location='cpu')
+checkpoint = torch.load(args.exp_dir / 'model.pt', map_location='cpu')
 print(checkpoint['epoch'], checkpoint['best_val_loss'].item())
 model.load_state_dict(checkpoint['model'])
 
 val_loader = create_data_loaders(data_path = args.data_path_val, args = args)
-acc_list = list(range(2, 4))
+acc_list = [2, 3, 4, 5, 6, 7, 8, 9, 10]
 
 val_loss_list = []
 

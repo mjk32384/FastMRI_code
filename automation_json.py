@@ -8,15 +8,15 @@ from utils.learning.train_part import train
 
 report_interval = 100
 
-epoch = 1
+epoch = 2
 batch_size = 1
 lr = 1e-3
 
-net_name = 'temp'
-cascade = 3
-chans = 5
-sens_chans = 3
-acc_weight = {5:1/2,9:1/2}
+net_name = 'test_6125_59_1323'
+cascade = 6
+chans = 12
+sens_chans = 5
+acc_weight = {5:1/3,9:2/3}
 previous_model = False
 
 params = {'report_interval':report_interval,

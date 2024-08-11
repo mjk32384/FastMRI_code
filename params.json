@@ -1,15 +1,15 @@
 {
     "report_interval": 100,
-    "epoch": 20,
+    "epoch": 2,
     "batch_size": 1,
     "learning_rate": 0.001,
-    "net_name": "test_6125_59_ver2",
-    "cascade": 6,
-    "chans": 12,
-    "sens_chans": 5,
+    "net_name": "temp",
+    "cascade": 3,
+    "chans": 5,
+    "sens_chans": 3,
     "acc_weight": {
         "5": 0.5,
         "9": 0.5
     },
-    "previous_model": "test_6125_59"
+    "previous_model": "temp"
 }
