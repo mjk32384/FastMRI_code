@@ -122,6 +122,7 @@ def train(args):
                    chans=args.chans, 
                    sens_chans=args.sens_chans)
     model.to(device=device)
+    
 
     """
     # using pretrained parameter

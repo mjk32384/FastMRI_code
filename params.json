@@ -1,0 +1,14 @@
+{
+    "report_interval": 100,
+    "epoch": 20,
+    "batch_size": 1,
+    "learning_rate": 0.001,
+    "net_name": "test_6125_59_ver2",
+    "cascade": 6,
+    "chans": 12,
+    "sens_chans": 5,
+    "acc_weight": {
+        "5": 0.5,
+        "9": 0.5
+    }
+}
