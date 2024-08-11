@@ -17,8 +17,7 @@ cascade = 6
 chans = 12
 sens_chans = 5
 acc_weight = {5:1/2,9:1/2}
-previous_model = 'test__6125_59'
-previous_model_epoch = 10
+previous_model = 'test_6125_59'
 
 params = {'report_interval':report_interval,
           'epoch':epoch,
@@ -29,8 +28,7 @@ params = {'report_interval':report_interval,
           'chans':chans,
           'sens_chans':sens_chans,
           'acc_weight':acc_weight,
-          'previous_model':previous_model,
-          'previous_model_epoch': previous_model_epoch}
+          'previous_model':previous_model}
 
 
 #print(json.dumps(params, indent = 4))

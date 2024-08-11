@@ -122,6 +122,7 @@ def train(args):
                    chans=args.chans, 
                    sens_chans=args.sens_chans)
     model.to(device=device)
+    
 
     """
     # using pretrained parameter
@@ -145,11 +146,25 @@ def train(args):
     best_val_loss = 1.
     start_epoch = 0
 
+
     
     train_loader = create_data_loaders(data_path = args.data_path_train, args = args, shuffle=True)
-    val_loader = create_data_loaders(data_path = args.data_path_val, args = args)
+    val_loader = create_data_loaders(data_path = args.data_path_val, args = args, validate=True)
     
     val_loss_log = np.empty((0, 2))
+
+    # created here
+    try:
+        if(args.previous_model): #import previous model
+            print('/'.join(str(args.val_loss_dir).split('/')[:-1]) + '/' + args.previous_model + '/model.pt')
+            checkpoint = torch.load('/'.join(str(args.val_loss_dir).split('/')[:-1]) + '/' + args.previous_model + '/checkpoints/model.pt', map_location='cpu')
+            start_epoch = checkpoint['epoch'] + 1
+            model.load_state_dict(checkpoint['model'])
+            print("Model imported : " + args.previous_model)
+    except:
+        pass
+    # to here
+    
     for epoch in range(start_epoch, args.num_epochs):
         print(f'Epoch #{epoch:2d} ............... {args.net_name} ...............')
         

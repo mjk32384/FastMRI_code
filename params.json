@@ -10,5 +10,6 @@
     "acc_weight": {
         "5": 0.5,
         "9": 0.5
-    }
+    },
+    "previous_model": "test_6125_59"
 }

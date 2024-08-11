@@ -36,8 +36,7 @@ def parse(params):
     parser.add_argument('--seed', type=int, default=430, help='Fix random seed')
     parser.add_argument('--acc_weight', type=dict, default=params['acc_weight'], help='Probability of each mask')
     parser.add_argument('--previous_model', type=str, default=params['previous_model'], help='Previous model(less epoch model) name')
-    parser.add_argument('--previous_model_epoch', type=str, default=params['previous_model_epoch'], help='Previous model(less epoch model) name')
-
+    
     args = parser.parse_args()
     return args
 
