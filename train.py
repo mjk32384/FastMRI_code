@@ -32,8 +32,7 @@ def parse():
     parser.add_argument('--target-key', type=str, default='image_label', help='Name of target key')
     parser.add_argument('--max-key', type=str, default='max', help='Name of max key in attributes')
     parser.add_argument('--seed', type=int, default=430, help='Fix random seed')
-
-    parser.add_argument('--acc-weight', type=dict, default={5:1/2, 9:1/2}, help='Probability of each mask')
+    parser.add_argument('--acc_weight', type=dict, default={4: 1/3, 5: 1/3, 9: 1/3}, help='Probability of each mask')
 
     args = parser.parse_args()
     return args
