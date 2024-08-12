@@ -185,7 +185,7 @@ def create_data_loaders(data_path, args, shuffle=False, isforward=False, default
     return data_loader
 
 def create_mask(acc_weight, width):
-    acc = random.choices(list(acc_weight.keys()), weights=acc_weight.values())[0]
+    acc = random.choices(list(acc_weight.keys()), weights=acc_weight.values(), k=1)[0]
     if width == 392:
         mask = np.array([int((i-196)%acc == 0) for i in range(392)], dtype=np.float32)
         mask[181:212] = 1

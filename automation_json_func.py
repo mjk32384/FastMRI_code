@@ -1,7 +1,11 @@
 import numpy as np
 import os, sys
 import json
+if os.getcwd() + '/utils/model/' not in sys.path:
+    sys.path.insert(1, os.getcwd() + '/utils/model/')
+    
 from utils.learning.train_part import train
+import subprocess
 
 
 def auto(args):
@@ -23,7 +27,21 @@ def auto(args):
     #print(json.dumps(params, indent = 4))
     with open('params.json', 'w') as f:
         json.dump(params, f, indent = 4)
-    
-    os.system(f'python -W ignore train_json.py')
-    os.system(f'python -W ignore reconstruct_json.py')
-    os.system(f'python -W ignore leaderboard_eval_json.py')
+    try:
+        subprocess.check_call('python -W ignore train_json.py', shell = True, stderr=sys.stderr, stdout=sys.stdout, stdin = sys.stdin)
+    except subprocess.CalledProcessError:
+        print ("Error Occured")
+        raise Exception("Cmd Command Error - Training")
+    try:
+        subprocess.check_call('python -W ignore reconstruct_json.py', shell = True, stderr=sys.stderr, stdout=sys.stdout, stdin = sys.stdin)
+    except subprocess.CalledProcessError:
+        print ("Error Occured")
+        raise Exception("Cmd Command Error - Reconstructing")
+    result = ""
+    try:
+        result = subprocess.check_output('python -W ignore leaderboard_eval_json.py', shell = True)
+        print(result.decode("utf-8"))
+    except subprocess.CalledProcessError:
+        print ("Error Occured")
+        raise Exception("Cmd Command Error - Leaderboard Eval")
+    return result.decode("utf-8")
