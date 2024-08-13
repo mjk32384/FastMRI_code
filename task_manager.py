@@ -4,7 +4,7 @@ import sys
 
 tasks = [
     {'report_interval':500, 'epoch':30, 'batch_size':1, 'lr':1e-3,
-     'net_name': 'test_6125_59_ver3', 'cascade':6, 'chans':12, 'sens_chans':5, 'acc_weight':{4:1}, 'previous_model':'test_6125_59_ver2'}, #추가 학습 to epoch 30
+     'net_name': 'test_6125_59_ver3', 'cascade':6, 'chans':12, 'sens_chans':5, 'acc_weight':{4:1}, 'previous_model':'test_6125_59_ver3'}, #추가 학습 to epoch 30
     {'report_interval':500, 'epoch':10, 'batch_size':1, 'lr':1e-3,
      'net_name': 'test_6125_all', 'cascade':6, 'chans':12, 'sens_chans':5,
      'acc_weight':{2:1, 3:1, 4:1, 5:1, 6:1, 7:1, 8:1, 9:1, 10:1}, 'previous_model':''} #23456789 균등분배

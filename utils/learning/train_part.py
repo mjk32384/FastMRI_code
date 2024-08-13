@@ -57,7 +57,7 @@ def validate(args, model, data_loader):
     start = time.perf_counter()
 
     with torch.no_grad():
-        for iter, data in enumerate(tqdm.tqdm(data_loader)):
+        for iter, data in enumerate(data_loader):
             mask, kspace, target, _, fnames, slices = data
             kspace = kspace.cuda(non_blocking=True)
             mask = mask.cuda(non_blocking=True)
@@ -90,7 +90,7 @@ def save_model(args, exp_dir, epoch, model, optimizer, best_val_loss, is_new_bes
             'best_val_loss': best_val_loss,
             'exp_dir': exp_dir
         },
-        f=exp_dir / '_model.pt'
+        f=exp_dir / 'model.pt'
     )
     if is_new_best:
         shutil.copyfile(exp_dir / 'model.pt', exp_dir / 'best_model.pt')
@@ -141,17 +141,6 @@ def train(args):
             del pretrained[layer]
     model.load_state_dict(pretrained)
     """
-    # created here
-    try:
-        if(args.previous_model): #import previous model
-            print('/'.join(str(args.val_loss_dir).split('/')[:-1]) + '/' + args.previous_model + '/model.pt')
-            checkpoint = torch.load('/'.join(str(args.val_loss_dir).split('/')[:-1]) + '/' + args.previous_model + '/checkpoints/model.pt', map_location='cpu')
-            start_epoch = checkpoint['epoch'] + 1
-            model.load_state_dict(checkpoint['model'])
-            print("Model imported : " + args.previous_model)
-    except:
-        pass
-    # to here
     
     loss_type = SSIMLoss().to(device=device)
     optimizer = torch.optim.Adam(model.parameters(), args.lr)
@@ -168,11 +157,32 @@ def train(args):
         val_loss_log = np.load(file_path)
     except:
         val_loss_log = np.empty((0, len(acc_list)+1))
+    # created here
+    try:
+        if(args.previous_model): #import previous model
+            print('/'.join(str(args.val_loss_dir).split('/')[:-1]) + '/' + args.previous_model + '/model.pt')
+            checkpoint = torch.load('/'.join(str(args.val_loss_dir).split('/')[:-1]) + '/' + args.previous_model + '/checkpoints/model.pt', map_location='cpu')
+            print(checkpoint['epoch'])
+            start_epoch = checkpoint['epoch'] + 1
+            model.load_state_dict(checkpoint['model'])
+            print("Model imported : " + args.previous_model)
+    except:
+        pass
+    # to here
+
+    # created here
+    prev_train_loss = np.inf;
+    loss_increase_epoch = 0;
+    # to here
 
     for epoch in range(start_epoch, args.num_epochs):
         print(f'Epoch #{epoch:2d} ............... {args.net_name} ...............')
+        # created here
+        print(f'Current learning rate {args.lr}')
+        # to here
         
         train_loss, train_time = train_epoch(args, epoch, model, train_loader, optimizer, loss_type)
+        
         val_loss_list = []
         val_time_list = []
 
@@ -208,3 +218,14 @@ def train(args):
             print(
                f'ForwardTime = {time.perf_counter() - start:.4f}s',
             )
+            
+        # created here
+        if prev_train_loss < train_loss:
+            loss_increase_epoch += 1
+        else:
+            loss_increase_epoch = 0
+        if loss_increase_epoch == 2:
+            args.lr = args.lr / 2
+            print("learning rate halved - new learning rate %f"%args.lr)
+        prev_train_loss = train_loss
+        # to here
