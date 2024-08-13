@@ -1,2 +1,4 @@
 __pycache__/
 .ipynb_checkpoints/
+params.json
+task_manager.py
