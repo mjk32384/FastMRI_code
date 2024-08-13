@@ -171,8 +171,8 @@ def train(args):
     # to here
 
     # created here
-    prev_train_loss = np.inf;
-    loss_increase_epoch = 0;
+    prev_train_loss = np.inf
+    loss_increase_epoch = 0
     # to here
 
     for epoch in range(start_epoch, args.num_epochs):
