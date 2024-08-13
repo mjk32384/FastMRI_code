@@ -90,7 +90,7 @@ def save_model(args, exp_dir, epoch, model, optimizer, best_val_loss, is_new_bes
             'best_val_loss': best_val_loss,
             'exp_dir': exp_dir
         },
-        f=exp_dir / '_model.pt'
+        f=exp_dir / 'model.pt'
     )
     if is_new_best:
         shutil.copyfile(exp_dir / 'model.pt', exp_dir / 'best_model.pt')
@@ -141,17 +141,6 @@ def train(args):
             del pretrained[layer]
     model.load_state_dict(pretrained)
     """
-    # created here
-    try:
-        if(args.previous_model): #import previous model
-            print('/'.join(str(args.val_loss_dir).split('/')[:-1]) + '/' + args.previous_model + '/model.pt')
-            checkpoint = torch.load('/'.join(str(args.val_loss_dir).split('/')[:-1]) + '/' + args.previous_model + '/checkpoints/model.pt', map_location='cpu')
-            start_epoch = checkpoint['epoch'] + 1
-            model.load_state_dict(checkpoint['model'])
-            print("Model imported : " + args.previous_model)
-    except:
-        pass
-    # to here
     
     loss_type = SSIMLoss().to(device=device)
     optimizer = torch.optim.Adam(model.parameters(), args.lr)
@@ -168,6 +157,17 @@ def train(args):
         val_loss_log = np.load(file_path)
     except:
         val_loss_log = np.empty((0, len(acc_list)+1))
+    # created here
+    try:
+        if(args.previous_model): #import previous model
+            print('/'.join(str(args.val_loss_dir).split('/')[:-1]) + '/' + args.previous_model + '/model.pt')
+            checkpoint = torch.load('/'.join(str(args.val_loss_dir).split('/')[:-1]) + '/' + args.previous_model + '/checkpoints/model.pt', map_location='cpu')
+            start_epoch = checkpoint['epoch'] + 1
+            model.load_state_dict(checkpoint['model'])
+            print("Model imported : " + args.previous_model)
+    except:
+        pass
+    # to here
 
     for epoch in range(start_epoch, args.num_epochs):
         print(f'Epoch #{epoch:2d} ............... {args.net_name} ...............')
