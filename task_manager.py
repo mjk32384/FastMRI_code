@@ -17,7 +17,7 @@ for i, task in enumerate(tasks):
     print("Task %d (out of %d) started"%(i + 1, len(tasks)))
     if i != 0:
         email_string = email_string + "\nand also\n\n" 
-    email_string = email_string +"Vessl1\nTask %d (out of %d) started\n"%(i + 1, len(tasks))
+    email_string = email_string +"Vessl2\nTask %d (out of %d) started\n"%(i + 1, len(tasks))
     email_string = email_string + "========== Details ==========\n" + '\n'.join([key + " : " + str(value) for key, value in task.items()]) + "\n"
     email_me(title = "[Notice] Task %d (out of %d) Started"%(i + 1, len(tasks)), detail = email_string)
 
@@ -28,13 +28,13 @@ for i, task in enumerate(tasks):
     except Exception as e:
         print("Task %d (out of %d) Terminated"%(i + 1, len(tasks)))
         print(e)
-        email_me(title = "[Error] Task Terminated, Go Find Out in Vessl 1", detail = "Task %d (out of %d) Terminated"%(i + 1, len(tasks)) + "\nException : " + str(e) + "\n" + "Ooopss...")
+        email_me(title = "[Error] Task Terminated, Go Find Out in Vessl 2", detail = "Task %d (out of %d) Terminated"%(i + 1, len(tasks)) + "\nException : " + str(e) + "\n" + "Ooopss...")
         sys.exit(1)
         
 
     #End Task
     print("Task %d (out of %d) Completed"%(i + 1, len(tasks)))
-    email_string = "Vessl1\nTask %d (out of %d) completed\n"%(i + 1, len(tasks)) + '\n'.join(result.split('\n')[1:]) + "\n"
+    email_string = "Vessl2\nTask %d (out of %d) completed\n"%(i + 1, len(tasks)) + '\n'.join(result.split('\n')[1:]) + "\n"
 print("Done")
-email_me(title = "[Notice] Vessl1 All Tasks Completed!", detail = "Congratulations!")
+email_me(title = "[Notice] Vessl2 All Tasks Completed!", detail = "Congratulations!")
 sys.exit(0)
