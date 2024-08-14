@@ -43,6 +43,7 @@ def forward(args):
     #print(checkpoint['epoch'], checkpoint['best_val_loss'].item())
     model.load_state_dict(checkpoint['model'])
     
-    forward_loader = create_data_loaders(data_path = args.data_path, args = args, isforward = True)
+    # added: default_acc = True
+    forward_loader = create_data_loaders(data_path = args.data_path, args = args, isforward = True, default_acc = True)
     reconstructions, inputs = test(args, model, forward_loader)
     save_reconstructions(reconstructions, args.forward_dir, inputs=inputs)

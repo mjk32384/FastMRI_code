@@ -27,6 +27,11 @@ def parse(params):
     parser.add_argument('--chans', type=int, default= params['chans'], help='Number of channels for cascade U-Net')
     parser.add_argument('--sens_chans', type=int, default=params['sens_chans'], help='Number of channels for sensitivity map U-Net')
     parser.add_argument("--input_key", type=str, default='kspace', help='Name of input key')
+    # added from here
+    parser.add_argument('--acc_weight', type=dict, default=params['acc_weight'], help='Probability of each mask')
+    parser.add_argument('--mask_mode', type=str, default=params['mask_mode'], help='Mode of mask applied to data')
+    # to here
+    # 이거 없으면 에러나서 추가함.
 
     args = parser.parse_args()
     return args
@@ -58,14 +63,15 @@ if __name__ == '__main__':
     # Public Acceleration
     args.data_path = args.path_data / public_acc # / "kspace"    
     args.forward_dir = '../result' / args.net_name / 'reconstructions_leaderboard' / 'public'
-    args.acc_weight = {5: 1}
+    # args.acc_weight = {5:1} 삭제함. 그냥 test_part에서 default_acc는 True로 해서 해결.
+    # 그냥 이렇게 하는게 더 깔끔할 것 같아서 바꿈.
     print(f'Saved into {args.forward_dir}')
     forward(args)
     
     # Private Acceleration
     args.data_path = args.path_data / private_acc # / "kspace"    
     args.forward_dir = '../result' / args.net_name / 'reconstructions_leaderboard' / 'private'
-    args.acc_weight = {9: 1}
+    # args.acc_weight = {9:1} 삭제함. 그냥 test_part에서 default_acc는 True로 해서 해결.
     print(f'Saved into {args.forward_dir}')
     forward(args)
     

@@ -36,7 +36,11 @@ def parse(params):
     parser.add_argument('--seed', type=int, default=430, help='Fix random seed')
     parser.add_argument('--acc_weight', type=dict, default=params['acc_weight'], help='Probability of each mask')
     parser.add_argument('--previous_model', type=str, default=params['previous_model'], help='Previous model(less epoch model) name')
-    
+    # added
+    parser.add_argument('--mask_mode', type=str, default=params['mask_mode'], help='Mode of mask applied to data')
+    parser.add_argument('--use_SSIM_mask_train', type=bool, default=params['use_SSIM_mask_train'], help='use SSIM mask when training')
+    # parser.add_argument('--use_SSIM_mask_val', type=bool, default=params['use_SSIM_mask_val'], help='use SSIM mask when validating')
+
     args = parser.parse_args()
     return args
 

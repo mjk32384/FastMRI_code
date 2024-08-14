@@ -24,7 +24,7 @@ def parse():
     parser.add_argument('-e', '--num-epochs', type=int, default=10, help='Number of epochs')
     parser.add_argument('-l', '--lr', type=float, default=1e-3, help='Learning rate')
     parser.add_argument('-r', '--report-interval', type=int, default=100, help='Report interval')
-    parser.add_argument('-n', '--net-name', type=Path, default='test_6125_59', help='Name of network')
+    parser.add_argument('-n', '--net-name', type=Path, default='test_6125_59_ver2', help='Name of network')
     parser.add_argument('-t', '--data-path-train', type=Path, default='../../home/Data/train/', help='Directory of train data')
     parser.add_argument('-v', '--data-path-val', type=Path, default='../../home/Data/val/', help='Directory of validation data')
     
@@ -36,6 +36,10 @@ def parse():
     parser.add_argument('--max-key', type=str, default='max', help='Name of max key in attributes')
     parser.add_argument('--seed', type=int, default=430, help='Fix random seed')
     parser.add_argument('--acc_weight', type=dict, default={4: 1/3, 5: 1/3, 9: 1/3}, help='Probability of each mask')
+
+    parser.add_argument('--previous_model', type=str, default='', help='Previous model(less epoch model) name')
+    parser.add_argument('--mask_mode', type=str, default='equispaced', help='Mode of mask applied to data')
+    parser.add_argument('--use_SSIM_mask_train', type=bool, default=True, help='use SSIM mask when training')
 
     args = parser.parse_args()
     return args
@@ -67,7 +71,7 @@ val_loss_list = []
 
 for acc in acc_list:
     val_loader = create_data_loaders(data_path = args.data_path_val, args = args, validate = True, acc = acc)
-    val_loss, num_subjects, reconstructions, targets, inputs, val_time = validate(args, model, val_loader)
+    val_loss, _, num_subjects, reconstructions, targets, inputs, val_time = validate(args, model, val_loader)
     val_loss_list.append(val_loss/num_subjects)
     print(f"validation of acc{acc} done. Time = {val_time}")
 print(val_loss_list)

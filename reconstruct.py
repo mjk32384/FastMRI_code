@@ -26,6 +26,9 @@ def parse():
     parser.add_argument('--sens_chans', type=int, default=5, help='Number of channels for sensitivity map U-Net')
     parser.add_argument("--input_key", type=str, default='kspace', help='Name of input key')
 
+    parser.add_argument('--acc_weight', type=dict, default={4:1, 5:1, 9:1}, help='Probability of each mask')
+    parser.add_argument('--mask_mode', type=str, default='equispaced', help='Mode of mask applied to data')
+
     args = parser.parse_args()
     return args
 

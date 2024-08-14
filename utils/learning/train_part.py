@@ -9,6 +9,8 @@ from pathlib import Path
 import copy
 #added here
 import tqdm
+# added here
+import cv2
 
 from collections import defaultdict
 from utils.data.load_data import create_data_loaders
@@ -17,6 +19,17 @@ from utils.common.loss_function import SSIMLoss
 from utils.model.varnet import VarNet
 
 import os
+
+# added from here
+def create_ssim_mask(target):
+    ssim_mask = np.zeros(target.shape[1:])
+    ssim_mask[target.cpu()[0]>5e-5] = 1
+    kernel = np.ones((3, 3), np.uint8)
+    ssim_mask = cv2.erode(ssim_mask, kernel, iterations=1)
+    ssim_mask = cv2.dilate(ssim_mask, kernel, iterations=15)
+    ssim_mask = cv2.erode(ssim_mask, kernel, iterations=14)
+    return ssim_mask
+# to here
 
 def train_epoch(args, epoch, model, data_loader, optimizer, loss_type):
     model.train()
@@ -31,7 +44,17 @@ def train_epoch(args, epoch, model, data_loader, optimizer, loss_type):
         target = target.cuda(non_blocking=True)
         maximum = maximum.cuda(non_blocking=True)
 
-        output = model(kspace, mask)
+        output = model(kspace, mask) # shape: [1, 384, 384]
+
+        # added from here
+        if args.use_SSIM_mask_train:
+            ssim_mask = create_ssim_mask(target)
+            ssim_mask = torch.tensor(ssim_mask)
+            ssim_mask = ssim_mask.cuda(non_blocking=True)
+            target = (target * ssim_mask).type(torch.float)
+            output = (output * ssim_mask).type(torch.float)
+        # to here
+
         loss = loss_type(output, target, maximum)
         optimizer.zero_grad()
         loss.backward()
@@ -54,6 +77,8 @@ def validate(args, model, data_loader):
     model.eval()
     reconstructions = defaultdict(dict)
     targets = defaultdict(dict)
+    # added this line
+    ssim_masks = defaultdict(dict)
     start = time.perf_counter()
 
     with torch.no_grad():
@@ -61,11 +86,15 @@ def validate(args, model, data_loader):
             mask, kspace, target, _, fnames, slices = data
             kspace = kspace.cuda(non_blocking=True)
             mask = mask.cuda(non_blocking=True)
-            output = model(kspace, mask)
+            output = model(kspace, mask) # shape: [1, 384, 384]
+            # added this line
+            ssim_mask = create_ssim_mask(target)
 
             for i in range(output.shape[0]):
                 reconstructions[fnames[i]][int(slices[i])] = output[i].cpu().numpy()
-                targets[fnames[i]][int(slices[i])] = target[i].numpy()
+                targets[fnames[i]][int(slices[i])] = target[i].numpy()\
+                # added this line
+                ssim_masks[fnames[i]][int(slices[i])] = ssim_mask
 
     for fname in reconstructions:
         reconstructions[fname] = np.stack(
@@ -75,9 +104,22 @@ def validate(args, model, data_loader):
         targets[fname] = np.stack(
             [out for _, out in sorted(targets[fname].items())]
         )
+    # added from here
+    for fname in ssim_masks:
+        ssim_masks[fname] = np.stack(
+            [out for _, out in sorted(ssim_masks[fname].items())]
+        )
+    # to here
+    
+    # 이 ssim_loss는 slice들의 평균이 아닌, h5파일들의 평균. leaderboard_eval에서는 slice들의 평균을 계산함
+    # utils.common.loss_function의 SSIMLoss와 leaderboard_eval의 SSIM과 SSIM 구하는 방법은 같음
     metric_loss = sum([ssim_loss(targets[fname], reconstructions[fname]) for fname in reconstructions])
+
+    #added this line
+    metric_loss_mask = sum([ssim_loss(targets[fname]*ssim_masks[fname], reconstructions[fname]*ssim_masks[fname]) for fname in reconstructions])
+    
     num_subjects = len(reconstructions)
-    return metric_loss, num_subjects, reconstructions, targets, None, time.perf_counter() - start
+    return metric_loss, metric_loss_mask, num_subjects, reconstructions, targets, None, time.perf_counter() - start
 
 
 def save_model(args, exp_dir, epoch, model, optimizer, best_val_loss, is_new_best):
@@ -152,11 +194,21 @@ def train(args):
     
     acc_list = [2, 3, 4, 5, 6, 7, 8, 9, 10]
 
-    file_path = os.path.join(args.val_loss_dir, "val_loss_log")
+    # edit: val_loss_log -> val_loss_log.npy
+    file_path = os.path.join(args.val_loss_dir, "val_loss_log.npy")
+    # added this line
+    file_path_mask = os.path.join(args.val_loss_dir, "val_loss_mask_log.npy")
     try:
         val_loss_log = np.load(file_path)
     except:
         val_loss_log = np.empty((0, len(acc_list)+1))
+    # added from here
+    try:
+        val_loss_mask_log = np.load(file_path_mask)
+    except:
+        val_loss_mask_log = np.empty((0, len(acc_list)+1))
+    # to here
+    
     # created here
     try:
         if(args.previous_model): #import previous model
@@ -184,17 +236,26 @@ def train(args):
         train_loss, train_time = train_epoch(args, epoch, model, train_loader, optimizer, loss_type)
         
         val_loss_list = []
+        val_loss_mask_list = []
         val_time_list = []
 
         for acc in acc_list:
             val_loader = create_data_loaders(data_path = args.data_path_val, args = args, validate = True, acc = acc)
-            val_loss, num_subjects, reconstructions, targets, inputs, val_time = validate(args, model, val_loader)
+            val_loss, val_loss_mask, num_subjects, reconstructions, targets, inputs, val_time = validate(args, model, val_loader)
             val_loss_list.append(val_loss/num_subjects)
+            # added this line
+            val_loss_mask_list.append(val_loss_mask/num_subjects)
             val_time_list.append(val_time)
 
         val_loss_list.insert(0, epoch)
+        # added this line
+        val_loss_mask_list.insert(0, epoch)
         val_loss_log = np.append(val_loss_log, np.array([val_loss_list]), axis=0)
+        # added this line
+        val_loss_mask_log = np.append(val_loss_mask_log, np.array([val_loss_mask_list]), axis=0)
         np.save(file_path, val_loss_log)
+        # added this line
+        np.save(file_path_mask, val_loss_mask_log)
         print(f"loss file saved! {file_path}")
 
         val_loss = np.mean(val_loss_list)
@@ -219,7 +280,7 @@ def train(args):
                f'ForwardTime = {time.perf_counter() - start:.4f}s',
             )
             
-        # created here
+        # added from here
         if prev_train_loss < train_loss:
             loss_increase_epoch += 1
         else:

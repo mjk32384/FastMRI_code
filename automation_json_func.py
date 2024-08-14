@@ -21,7 +21,11 @@ def auto(args):
               'chans':args['chans'],
               'sens_chans':args['sens_chans'],
               'acc_weight':args['acc_weight'],
-              'previous_model':args['previous_model']}
+              'previous_model':args['previous_model'],
+              # added from here
+              'mask_mode':args['mask_mode'],
+              'use_SSIM_mask_train':args['use_SSIM_mask_train']}
+                # to here
     
     
     #print(json.dumps(params, indent = 4))
