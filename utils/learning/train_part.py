@@ -258,7 +258,9 @@ def train(args):
         np.save(file_path_mask, val_loss_mask_log)
         print(f"loss file saved! {file_path}")
 
-        val_loss = np.mean(val_loss_list)
+        # edited here
+        # ssim mask 적용된 validation loss로 val_loss계산
+        val_loss = np.mean(val_loss_mask_list[1:])
 
         train_loss = torch.tensor(train_loss).cuda(non_blocking=True)
         val_loss = torch.tensor(val_loss).cuda(non_blocking=True)
