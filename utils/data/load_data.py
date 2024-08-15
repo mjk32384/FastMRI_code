@@ -26,7 +26,7 @@ class SliceData(Dataset):
             # shuffle을 추가할 수도 있는데, seed 고정을 해도되는지 몰라서 일단 pass
             if self.validate:
                 # sorted 추가 (validation을 동일한 dataset으로 하기 위해)
-                image_files = sorted(image_files)[:len(image_files)//5]
+                image_files = sorted(image_files)[:len(image_files)//3]
             for fname in sorted(image_files):
                 num_slices = self._get_metadata(fname)
 
@@ -39,7 +39,7 @@ class SliceData(Dataset):
         # shuffle을 추가할 수도 있는데, seed 고정을 해도되는지 몰라서 일단 pass
         if self.validate:
             # sorted 추가 (validation을 동일한 dataset으로 하기 위해)
-            kspace_files = sorted(kspace_files)[:len(kspace_files)//5]
+            kspace_files = sorted(kspace_files)[:len(kspace_files)//3]
         for fname in sorted(kspace_files):
             num_slices = self._get_metadata(fname)
 
