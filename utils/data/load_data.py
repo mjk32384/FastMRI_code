@@ -1,12 +1,16 @@
 import h5py
 import random
-from utils.data.transforms import DataTransform
 from torch.utils.data import Dataset, DataLoader
+import torch.nn.functional as F
+import torch
 from pathlib import Path
 import numpy as np
 
+from utils.data.transforms import DataTransform
+
 class SliceData(Dataset):
-    def __init__(self, root, transform, input_key, target_key, forward=False, acc_weight = None, default_acc = False, validate=False, acc=None, mask_mode='equispaced'):
+    def __init__(self, root, transform, input_key, target_key, forward=False, acc_weight = None, default_acc = False,
+                 validate=False, acc=None, mask_mode='equispaced'):
         self.transform = transform
         self.input_key = input_key
         self.target_key = target_key
@@ -83,13 +87,12 @@ class SliceData(Dataset):
             with h5py.File(image_fname, "r") as hf:
                 target = hf[self.target_key][dataslice]
                 attrs = dict(hf.attrs)
-            
-        return self.transform(mask, input, target, attrs, kspace_fname.name, dataslice)
 
+        return self.transform(mask, input, target, attrs, kspace_fname.name, dataslice)
 
 # create_data_loader가 validation/test시에도 문제 없는지 한번 확인해야 할 듯
 # isforward: reconstruction 할 때만 true
-def create_data_loaders(data_path, args, shuffle=False, isforward=False, default_acc=False, validate=False, acc=None):
+def create_data_loaders(data_path, args, shuffle=False, isforward=False, default_acc=False, validate=False, acc=None, epoch_fn = None, augment = False, add_gaussian_noise = False):
     if isforward == False:
         max_key_ = args.max_key
         target_key_ = args.target_key
@@ -98,7 +101,7 @@ def create_data_loaders(data_path, args, shuffle=False, isforward=False, default
         target_key_ = -1
     data_storage = SliceData(
         root=data_path,
-        transform=DataTransform(isforward, max_key_),
+        transform=DataTransform(isforward, max_key_, epoch_fn, augment, add_gaussian_noise),
         input_key=args.input_key,
         target_key=target_key_,
         forward = isforward,
@@ -107,7 +110,7 @@ def create_data_loaders(data_path, args, shuffle=False, isforward=False, default
         validate = validate,
         acc = acc,
         # added here
-        mask_mode = args.mask_mode
+        mask_mode = args.mask_mode,
     )
 
     data_loader = DataLoader(

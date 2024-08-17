@@ -21,7 +21,25 @@ from utils.model.varnet import VarNet
 import os
 
 # added from here
+class EpochTracker:
+    """
+    현재 epoch을 전달해주는 class
+    epoch에 따라서 Data Augmentation을 다르게 하기 위해서 만듦
+    """
+    def __init__(self):
+        self.epoch = 0
+
+    def get_epoch(self):
+        return self.epoch
+
+    def set_epoch(self, epoch):
+        self.epoch = epoch
+
 def create_ssim_mask(target):
+    """
+    SSIM mask 만드는 함수.
+    leaderboard_eval에 있는 코드 가져옴
+    """
     ssim_mask = np.zeros(target.shape[1:])
     ssim_mask[target.cpu()[0]>5e-5] = 1
     kernel = np.ones((3, 3), np.uint8)
@@ -53,9 +71,13 @@ def train_epoch(args, epoch, model, data_loader, optimizer, loss_type):
             ssim_mask = ssim_mask.cuda(non_blocking=True)
             target = (target * ssim_mask).type(torch.float)
             output = (output * ssim_mask).type(torch.float)
-        # to here
 
-        loss = loss_type(output, target, maximum)
+        # loss가 SSIM이면 위, L1 or MSE면 아래
+        try:
+            loss = loss_type(output, target, maximum)
+        except:
+            loss = loss_type(output, target)
+        # to here
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
@@ -183,14 +205,31 @@ def train(args):
             del pretrained[layer]
     model.load_state_dict(pretrained)
     """
-    
-    loss_type = SSIMLoss().to(device=device)
+    # added from here
+    if args.loss_type == 'SSIM':
+        loss_type = SSIMLoss().to(device=device)
+    elif args.loss_type == 'MSE':
+        loss_type = nn.MSELoss().to(device=device)
+    elif args.loss_type == 'L1':
+        loss_type = nn.L1Loss().to(device=device)
+    else:
+        raise Exception("Invalid loss type")
+    # to here
+
     optimizer = torch.optim.Adam(model.parameters(), args.lr)
 
     best_val_loss = 1.
     start_epoch = 0
     
-    train_loader = create_data_loaders(data_path = args.data_path_train, args = args, shuffle=True)    
+    # added this line
+    epoch_tracker = EpochTracker()
+    # edited this line
+    train_loader = create_data_loaders(data_path = args.data_path_train,
+                                       args = args,
+                                       shuffle=True,
+                                       augment = args.augment,
+                                       epoch_fn = epoch_tracker.get_epoch,
+                                       add_gaussian_noise=args.add_gaussian_noise)
     
     acc_list = [2, 3, 4, 5, 6, 7, 8, 9, 10]
 
@@ -232,6 +271,9 @@ def train(args):
         # created here
         print(f'Current learning rate {args.lr}')
         # to here
+        
+        # added this line
+        epoch_tracker.set_epoch(epoch)
         
         train_loss, train_time = train_epoch(args, epoch, model, train_loader, optimizer, loss_type)
         

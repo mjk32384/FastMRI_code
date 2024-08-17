@@ -38,6 +38,9 @@ def parse():
     parser.add_argument('--mask_mode', type=str, default='equispaced', help='Mode of mask applied to data')
     parser.add_argument('--use_SSIM_mask_train', type=bool, default=True, help='use SSIM mask when training')
     # parser.add_argument('--use_SSIM_mask_val', type=bool, default=True, help='use SSIM mask when valdidating')
+    parser.add_argument('--add_gaussian_noise', type=bool, default=True, help='Add gaussian noise to an image when training')
+    parser.add_argument('--loss_type', type=str, default='MSE', help='Loss type when training. L1 or MSE or SSIM')
+    parser.add_argument('--augment', type=bool, default=True, help='Implement Data Augmentation')
     # to here
     args = parser.parse_args()
     return args

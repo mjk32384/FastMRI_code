@@ -24,8 +24,11 @@ def auto(args):
               'previous_model':args['previous_model'],
               # added from here
               'mask_mode':args['mask_mode'],
-              'use_SSIM_mask_train':args['use_SSIM_mask_train']}
-                # to here
+              'use_SSIM_mask_train':args['use_SSIM_mask_train'],
+              'add_gaussian_noise':args['add_gaussian_noise'],
+              'loss_type':args['loss_type'],
+              'augment': args['augment']}
+            # to here
     
     
     #print(json.dumps(params, indent = 4))

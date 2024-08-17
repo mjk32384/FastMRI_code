@@ -30,6 +30,7 @@ def parse(params):
     # added from here
     parser.add_argument('--acc_weight', type=dict, default=params['acc_weight'], help='Probability of each mask')
     parser.add_argument('--mask_mode', type=str, default=params['mask_mode'], help='Mode of mask applied to data')
+    parser.add_argument('--add_gaussian_noise', type=float, default=params['add_gaussian_noise'], help='Add gaussian noise to an image when training')
     # to here
     # 이거 없으면 에러나서 추가함.
 

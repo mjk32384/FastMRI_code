@@ -17,7 +17,6 @@ from utils.model.varnet import VarNet
 from utils.data.load_data import create_mask, create_data_loaders
 from utils.data.transforms import DataTransform
 from utils.common.utils import ssim_loss
-from utils.model.varnet import VarNet
 
 
 def parse(arguments):
