@@ -273,8 +273,10 @@ def train(args):
         # to here
         
         # added this line
-        epoch_tracker.set_epoch(epoch)
-        
+        # 일단 epoch이 커질수록 Data Augmentation이 더 많이되도록 설정했는데, 일단 테스트해보기 위해서 epoch=50으로 설정했음
+        # epoch_tracker.set_epoch(epoch+1)
+        epoch_tracker.set_epoch(50)
+
         train_loss, train_time = train_epoch(args, epoch, model, train_loader, optimizer, loss_type)
         
         val_loss_list = []
