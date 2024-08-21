@@ -232,7 +232,6 @@ def train(args):
                                        add_gaussian_noise=args.add_gaussian_noise)
     
     acc_list = [2, 3, 4, 5, 6, 7, 8, 9, 10]
-
     # edit: val_loss_log -> val_loss_log.npy
     file_path = os.path.join(args.val_loss_dir, "val_loss_log.npy")
     # added this line
@@ -248,13 +247,24 @@ def train(args):
         val_loss_mask_log = np.empty((0, len(acc_list)+1))
     # to here
     
+    file_path_lr = os.path.join(args.val_loss_dir, "lr_log.npy")
+    lr_list = np.empty(shape = (0, 2))
+    
+    if(args.previous_model):
+        file_path_lr_prev = '/'.join(str(args.val_loss_dir).split('/')[:-1]) + '/' + args.previous_model + '/lr_log.npy'
+        try:
+            lr_list = np.load(file_path_lr_prev)
+            args.lr = lr_list[-1][1]
+        except:
+            print('previous model learning rate load failed.. uh-oh')
+    
     # created here
     try:
         if(args.previous_model): #import previous model
             print('/'.join(str(args.val_loss_dir).split('/')[:-1]) + '/' + args.previous_model + '/model.pt')
             checkpoint = torch.load('/'.join(str(args.val_loss_dir).split('/')[:-1]) + '/' + args.previous_model + '/checkpoints/model.pt', map_location='cpu')
             print(checkpoint['epoch'])
-            start_epoch = checkpoint['epoch'] + 1
+            start_epoch = checkpoint['epoch']
             model.load_state_dict(checkpoint['model'])
             print("Model imported : " + args.previous_model)
     except:
@@ -267,6 +277,10 @@ def train(args):
     # to here
 
     for epoch in range(start_epoch, args.num_epochs):
+        #added here
+        lr_list = np.append(lr_list, np.array([[epoch, args.lr]]), axis = 0)
+        np.save(file_path_lr, lr_list)
+        
         print(f'Epoch #{epoch:2d} ............... {args.net_name} ...............')
         # created here
         print(f'Current learning rate {args.lr}')
@@ -281,6 +295,7 @@ def train(args):
         val_loss_mask_list = []
         val_time_list = []
 
+
         for acc in acc_list:
             val_loader = create_data_loaders(data_path = args.data_path_val, args = args, validate = True, acc = acc)
             val_loss, val_loss_mask, num_subjects, reconstructions, targets, inputs, val_time = validate(args, model, val_loader)
@@ -288,7 +303,6 @@ def train(args):
             # added this line
             val_loss_mask_list.append(val_loss_mask/num_subjects)
             val_time_list.append(val_time)
-
         val_loss_list.insert(0, epoch)
         # added this line
         val_loss_mask_list.insert(0, epoch)
