@@ -376,7 +376,7 @@ class DataAugmentor:
         parser.add_argument(
             '--aug_weight_rot90', 
             type=float, 
-            default=1.0, 
+            default=0, 
             help='Weight of probability of rotation by multiples of 90 degrees. Augmentation probability will be multiplied by this constant'
         )  
         parser.add_argument(
