@@ -136,3 +136,23 @@ tasks = [
     'loss_type': 'SSIM',
     'add_gaussian_noise': True,
     'augment': False}, # lr 1/10, gaussian
+{'report_interval':500, 'epoch':50, 'batch_size':1, 'lr':1e-4,
+    'cascade':6, 'chans':12, 'sens_chans':5,
+    'net_name': f'test_6125_all_ssim_mask_60_lr_onetenth',
+    'acc_weight':{2:1, 3:1, 4:1, 5:1, 6:1, 7:1, 8:1, 9:1, 10:1},
+    'previous_model':'test_6125_all_ssim_mask_50_lr_onetenth',
+    'mask_mode':'equispaced',
+    'use_SSIM_mask_train':True,
+    'loss_type': 'SSIM',
+    'add_gaussian_noise': False,
+    'augment': False}, # lr 1/10
+{'report_interval':500, 'epoch':50, 'batch_size':1, 'lr':1e-4,
+    'cascade':6, 'chans':12, 'sens_chans':5,
+    'net_name': f'test_6125_all_ssim_mask_70_lr_onetenth',
+    'acc_weight':{2:1, 3:1, 4:1, 5:1, 6:1, 7:1, 8:1, 9:1, 10:1},
+    'previous_model':'test_6125_all_ssim_mask_60_lr_onetenth',
+    'mask_mode':'equispaced',
+    'use_SSIM_mask_train':True,
+    'loss_type': 'SSIM',
+    'add_gaussian_noise': False,
+    'augment': False}, # lr 1/10

@@ -1,74 +1,67 @@
-import numpy as np
-import pandas as pd
-import h5py
+from graph import parse, SSIM_by_slice, flatten_list
 import matplotlib.pyplot as plt
+import numpy as np
+import pickle, h5py
+with open('test/ssim_log.pkl', 'rb') as f:
+    ssim_log = pickle.load(f)[0]
+data_path_val = '../../home/Data/val/'
+ssim_log_396 = {}
+ssim_log_392 = {}
+for key, value in ssim_log.items():
+    with h5py.File(data_path_val+'/kspace/'+key) as f:
+        if f['kspace'].shape[-1] == 396:
+            ssim_log_396[key] = value
+        elif f['kspace'].shape[-1] == 392:
+            ssim_log_392[key] = value
+        else:
+            print("Error!")
+ssim_values_392 = np.array(flatten_list([list(dictionary.values()) for dictionary in ssim_log_392.values()]))
+ssim_values_396 = np.array(flatten_list([list(dictionary.values()) for dictionary in ssim_log_396.values()]))
+plt.hist(ssim_values_396, bins = 20, label = 'kspace width: 396')
+plt.hist(ssim_values_392, bins = 20, label = 'kspace width: 392')
+plt.xlabel('SSIM loss')
+plt.ylabel('# of data')
+plt.legend()
+from graph import SSIM_by_pixel, parse, reconstruction_slice
+import matplotlib.pyplot as plt
+import random, torch
 
-from pathlib import Path
-import argparse
-import torch
-import os, sys
+huge_loss_files = [[filename, slice] for filename, dictionary in ssim_log_396.items() for slice, ssim in dictionary.items() if ssim > 0.035]
+random.shuffle(huge_loss_files)
 
-import pathlib
-import platform
-if platform.system() == 'Linux':
-  pathlib.WindowsPath = pathlib.PosixPath
+sample = 4
+fig, ax = plt.subplots(sample, 3, figsize = (3*5, sample*5))
 
-if os.getcwd() + '/utils/model/' not in sys.path:
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    sys.path.append(os.path.join(script_dir, 'utils/model'))
-
-from utils.data.load_data import create_data_loaders
-from utils.learning.train_part import validate_acc
-from utils.model.varnet import VarNet
-
-def parse():
-    parser = argparse.ArgumentParser(description='Train Varnet on FastMRI challenge Images',
-                                    formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('-g', '--GPU-NUM', type=int, default=0, help='GPU number to allocate')
-    parser.add_argument('-b', '--batch-size', type=int, default=1, help='Batch size')
-    parser.add_argument('-e', '--num-epochs', type=int, default=10, help='Number of epochs')
-    parser.add_argument('-l', '--lr', type=float, default=1e-3, help='Learning rate')
-    parser.add_argument('-r', '--report-interval', type=int, default=100, help='Report interval')
-    parser.add_argument('-n', '--net-name', type=Path, default='test_Varnet', help='Name of network')
-    parser.add_argument('-t', '--data-path-train', type=Path, default='../../home/Data/train/', help='Directory of train data')
-    parser.add_argument('-v', '--data-path-val', type=Path, default='../../home/Data/val/', help='Directory of validation data')
+for i, [filename, slice] in enumerate(huge_loss_files[:sample]):
     
-    parser.add_argument('--cascade', type=int, default=6, help='Number of cascades | Should be less than 12') ## important hyperparameter, 1 in original
-    parser.add_argument('--chans', type=int, default=12, help='Number of channels for cascade U-Net | 18 in original varnet') ## important hyperparameter, 9 in original
-    parser.add_argument('--sens_chans', type=int, default=5, help='Number of channels for sensitivity map U-Net | 8 in original varnet') ## important hyperparameter, 4 in original
-    parser.add_argument('--input-key', type=str, default='kspace', help='Name of input key')
-    parser.add_argument('--target-key', type=str, default='image_label', help='Name of target key')
-    parser.add_argument('--max-key', type=str, default='max', help='Name of max key in attributes')
-    parser.add_argument('--seed', type=int, default=430, help='Fix random seed')
+    netname = 'test_6125_all_ssim_mask_40'
+    image_fname = '../../home/Data/val/image/' + filename
+    kspace_fname = '../../home/Data/val/kspace/' + filename
 
-    args = parser.parse_args()
-    return args
+    mask_mode = 'equispaced'
+    mask_acc = 9
 
-args = parse()
+    args = parse(['-n', netname, '--mask_mode', mask_mode, '--acc_weight', f'{{"{mask_acc}":"1"}}'])
+    args.acc_weight = {int(k):int(v) for k, v in args.acc_weight.items()}
+    args.image_fname = image_fname
+    args.kspace_fname = kspace_fname
+    args.dataslice = slice
+    args.use_SSIM_mask = True
 
-args.exp_dir = '../result' / args.net_name / 'checkpoints'
-args.val_dir = '../result' / args.net_name / 'reconstructions_val'
-args.main_dir = '../result' / args.net_name / __file__
-args.val_loss_dir = '../result' / args.net_name
+    ssim_graph = SSIM_by_pixel(args)
+    
 
-device = torch.device(f'cuda:{args.GPU_NUM}' if torch.cuda.is_available() else 'cpu')
-torch.cuda.set_device(device)
-print ('Current cuda device ', torch.cuda.current_device())
+    device = torch.device(f'cuda:{0}' if torch.cuda.is_available() else 'cpu')
+    torch.cuda.set_device(device)
+    recon, target, _ = reconstruction_slice(args, device)
+    ax[i, 1].imshow(target.squeeze().cpu(), cmap = 'gray')
+    ax[i, 1].set_xlabel('original')
+    ax[i, 2].imshow(recon.squeeze().cpu(), cmap = 'gray')
+    ax[i, 2].set_xlabel('reconstruction')
 
-model = VarNet(num_cascades=args.cascade, 
-                chans=args.chans, 
-                sens_chans=args.sens_chans)
-model.to(device=device)
+    ax[i, 0].imshow(ssim_graph, cmap='gray')
+    ax[i, 0].set_xlabel('SSIM')
+    ax[i, 1].set_title(f"mean SSIM: {ssim_graph.mean():.4f}")
 
-
-checkpoint = torch.load(args.exp_dir / 'best_model.pt', map_location='cpu')
-print(checkpoint['epoch'], checkpoint['best_val_loss'].item())
-model.load_state_dict(checkpoint['model'])
-
-val_loader = create_data_loaders(data_path = args.data_path_val, args = args)
-acc_list = [4, 5, 8]
-loss_list, time_list = validate_acc(model, val_loader, acc_list)
-
-print(loss_list)
-print()
-print(time_list)
+for i in range(sample*3):
+    ax[i//3, i%3].axis('off')

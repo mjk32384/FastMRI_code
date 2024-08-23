@@ -45,6 +45,16 @@ def parse(arguments):
     args = parser.parse_args(arguments)
     return args
 
+# nested list를 1D list로 바꿔주는 함수
+def flatten_list(nested_list):
+    return_list = []
+    for item in nested_list:
+        if type(item) == list:
+            return_list += flatten_list(item)
+        else:
+            return_list.append(item)
+    return return_list
+
 # val_loss_log로부터 그래프 그려주는 함수
 def graph_val_loss(data, label):
     fig = plt.figure(figsize=(10, 13))
@@ -133,7 +143,7 @@ class SSIM(SSIMLoss):
 
 # slice 하나의 reconsrtuction을 해주는 함수
 def reconstruction_slice(args, device):
-    transform = DataTransform(isforward=False, max_key='max')
+    transform = DataTransform(isforward=False, max_key='max', epoch_fn = lambda: 0, augment=False, add_gaussian_noise=False)
     dataslice = args.dataslice
 
     with h5py.File(args.image_fname, "r") as hf:
@@ -176,8 +186,24 @@ def SSIM_by_pixel(args):
 
     recon, target, maximum = reconstruction_slice(args, device)
 
-    ssim_graph = ssim_calculator(recon[0], target, maximum).cpu().numpy()
-    return ssim_graph[0][0]
+
+    if args.use_SSIM_mask:
+        ssim_mask = np.zeros(target.shape)
+        ssim_mask[target.cpu().numpy()>5e-5] = 1
+
+        kernel = np.ones((3, 3), np.uint8)
+        ssim_mask = cv2.erode(ssim_mask, kernel, iterations=1)
+        ssim_mask = cv2.dilate(ssim_mask, kernel, iterations=15)
+        ssim_mask = cv2.erode(ssim_mask, kernel, iterations=14)
+    else:
+        ssim_mask = np.ones(target.shape)
+
+    ssim_mask = torch.from_numpy(ssim_mask.astype(np.float32))
+    ssim_mask = ssim_mask.cuda()
+    ssim_graph = ssim_calculator(recon[0]*ssim_mask, target*ssim_mask, maximum).cpu().numpy()
+    ssim_graph = ssim_graph[0][0]
+
+    return ssim_graph
 
 # 슬라이스별 SSIM 구해주는 함수
 def SSIM_by_slice(args):
